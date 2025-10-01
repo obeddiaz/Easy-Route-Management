@@ -56,24 +56,22 @@ type RouteParams<
 > = T extends `${infer _Start}:${infer Param}/${infer Rest}`
   ? Param extends `${infer P}?`
     ? {
-        [K in P | keyof RouteParams<Rest, V>]:
-          K extends P
-            ? V extends Record<K, readonly string[]>
-              ? V[K][number] | undefined
-              : string | undefined
-            : K extends keyof RouteParams<Rest, V>
-              ? RouteParams<Rest, V>[K]
-              : never;
+        [K in P | keyof RouteParams<Rest, V>]: K extends P
+          ? V extends Record<K, readonly string[]>
+            ? V[K][number] | undefined
+            : string | undefined
+          : K extends keyof RouteParams<Rest, V>
+            ? RouteParams<Rest, V>[K]
+            : never;
       }
     : {
-        [K in Param | keyof RouteParams<Rest, V>]:
-          K extends Param
-            ? V extends Record<K, readonly string[]>
-              ? V[K][number]
-              : string
-            : K extends keyof RouteParams<Rest, V>
-              ? RouteParams<Rest, V>[K]
-              : never;
+        [K in Param | keyof RouteParams<Rest, V>]: K extends Param
+          ? V extends Record<K, readonly string[]>
+            ? V[K][number]
+            : string
+          : K extends keyof RouteParams<Rest, V>
+            ? RouteParams<Rest, V>[K]
+            : never;
       }
   : T extends `${infer _Start}:${infer Param}`
     ? Param extends `${infer P}?`
@@ -87,7 +85,7 @@ type RouteParams<
             ? V[Param][number]
             : string;
         }
-    : {}
+    : {};
 
 type GeneratePathFunction<
   T extends string,
@@ -161,7 +159,7 @@ type Route<
 
 type InferRoutes<
   T,
-  ParentPath extends string = '',
+  ParentPath extends string = "",
   V extends Record<string, readonly string[]> | undefined = undefined,
 > = {
   [K in keyof T]: T[K] extends {
@@ -170,25 +168,25 @@ type InferRoutes<
     acceptedPathValues?: Record<string, readonly string[]>;
   }
     ? Route<
-        `${ParentPath}/${T[K]['path']}`,
-        T[K]['path'],
-        V & T[K]['acceptedPathValues']
+        `${ParentPath}/${T[K]["path"]}`,
+        T[K]["path"],
+        V & T[K]["acceptedPathValues"]
       > &
         InferRoutes<
-          T[K]['subRoutes'],
-          `${ParentPath}/${T[K]['path']}`,
+          T[K]["subRoutes"],
+          `${ParentPath}/${T[K]["path"]}`,
           V extends Record<string, readonly string[]>
-            ? V & T[K]['acceptedPathValues']
-            : T[K]['acceptedPathValues']
+            ? V & T[K]["acceptedPathValues"]
+            : T[K]["acceptedPathValues"]
         >
     : T[K] extends {
           path: string;
           acceptedPathValues?: Record<string, readonly string[]>;
         }
       ? Route<
-          `${ParentPath}/${T[K]['path']}`,
-          T[K]['path'],
-          V & T[K]['acceptedPathValues']
+          `${ParentPath}/${T[K]["path"]}`,
+          T[K]["path"],
+          V & T[K]["acceptedPathValues"]
         >
       : never;
 };
@@ -212,7 +210,7 @@ type GenericRouteType = {
 
 const generateRouteParams = (
   routesObj: RouteObjInterface[string],
-  prevPath = '',
+  prevPath = "",
   hasParams = false,
 ): GenericRouteType => {
   const routes: GenericRouteType = {
@@ -232,12 +230,14 @@ const generateRouteParams = (
   if (routeHasParams) {
     routes.generatePath = (params: { [key: string]: string } = {}): string => {
       let path = routes.path;
-      return path.replace(/:([^/?]+)\??/g, (_, key) => {
+      return path
+        .replace(/:([^/?]+)\??/g, (_, key) => {
           if (params[key] != null) {
-          return params[key];
+            return params[key];
           }
           return "";
-      }).replace(/\/+/g, "/");
+        })
+        .replace(/\/+/g, "/");
     };
   }
   return routes;

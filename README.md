@@ -1,6 +1,6 @@
 # Easy Route Management
 
-**A simple, type-safe way to manage and generate nested routes.**  
+**A simple, type-safe way to manage and generate nested routes.**
 
 Managing routes manually can quickly become cumbersome as your app grows. Easy Route Management allows you to define your routes in a nested object and automatically generate paths with parameters, reducing errors and making refactoring easier. It works with **React Router, Express, Angular, or any library that uses paths**.
 
@@ -16,8 +16,6 @@ Managing routes manually can quickly become cumbersome as your app grows. Easy R
 
 ---
 
----
-
 ## Installation
 
 ```bash
@@ -29,29 +27,39 @@ yarn add easy-route-management
 ## Usage
 
 ```ts
-
-import createRoutePaths, { RouteObjInterface } from 'easy-route-management';
+import createRoutePaths, { RouteObjInterface } from "easy-route-management";
 
 const routesObj = {
   user: {
-    path: 'user',
+    path: "user",
     subRoutes: {
       settings: {
-        path: 'settings',
+        path: "settings",
       },
     },
   },
   posts: {
-    path: 'posts',
+    path: "posts",
     subRoutes: {
       byId: {
-        path: ':postId',
+        path: ":postId",
       },
     },
   },
 } as const satisfies RouteObjInterface;
 
 const appRoutes = createRoutePaths(routesObj);
+```
+
+### Quick Example
+
+```ts
+const postId = "123";
+// Before: Hardcoding paths
+navigate(`/posts/${postId}`);
+
+// After: Type-safe and dynamic
+navigate(appRoutes.posts.byId.generatePath({ postId }));
 ```
 
 ### Usage with React rotuer
@@ -67,7 +75,7 @@ const appRoutes = createRoutePaths(routesObj);
 
 ```tsx
 navigate(appRoutes.user.path); // '/user'
-navigate(appRoutes.posts.byId.generatePath({ postId: '123' })); // '/posts/123'
+navigate(appRoutes.posts.byId.generatePath({ postId: "123" })); // '/posts/123'
 ```
 
 ### Type Safety
@@ -82,29 +90,27 @@ navigate(appRoutes.notExistingRoute.path); // ❌ Error: Property 'notExistingRo
 ### Express.js examples
 
 ```ts
-
-import express from 'express';
-import createRoutePaths from 'easy-route-management';
+import express from "express";
+import createRoutePaths from "easy-route-management";
 
 const routesObj = {
   user: {
-    path: 'user',
+    path: "user",
     subRoutes: {
       settings: {
-        path: 'settings',
+        path: "settings",
       },
     },
   },
   posts: {
-    path: 'posts',
+    path: "posts",
     subRoutes: {
       byId: {
-        path: ':postId',
+        path: ":postId",
       },
     },
   },
 };
-
 
 const appRoutes = createRoutePaths(routesObj);
 const app = express();
@@ -113,17 +119,16 @@ const app = express();
 ### Use in Express Route Handlers
 
 ```ts
-
 app.get(appRoutes.user.path, (req, res) => {
-  res.send('User Home');
+  res.send("User Home");
 });
 
 app.get(appRoutes.user.settings.path, (req, res) => {
-  res.send('User Settings');
+  res.send("User Settings");
 });
 
 app.get(appRoutes.posts.path, (req, res) => {
-  res.send('Posts List');
+  res.send("Posts List");
 });
 
 app.get(appRoutes.posts.byId.path, (req, res) => {
@@ -135,16 +140,15 @@ app.get(appRoutes.posts.byId.path, (req, res) => {
 ## Extended Examples
 
 ```ts
-
 const routesObj = {
   dashboard: {
-    path: 'dashboard',
+    path: "dashboard",
     subRoutes: {
       analytics: {
-        path: 'analytics',
+        path: "analytics",
         subRoutes: {
           byDate: {
-            path: ':date',
+            path: ":date",
           },
         },
       },
@@ -154,17 +158,43 @@ const routesObj = {
 
 const appRoutes = createRoutePaths(routesObj);
 
-navigate(appRoutes.dashboard.analytics.byDate.generatePath({ date: '2025-10-01' }));
+navigate(
+  appRoutes.dashboard.analytics.byDate.generatePath({ date: "2025-10-01" }),
+);
 // Result: '/dashboard/analytics/2025-10-01'
 ```
 
 ### Error handling
 
 ```ts
-
 // Missing parameter
 appRoutes.dashboard.analytics.byDate.generatePath(); // ❌ TypeScript error
 
 // Accessing undefined route
 navigate(appRoutes.dashboard.reports); // ❌ Property 'reports' does not exist
+```
+
+### Extracting Route Parameter Types
+
+```ts
+const routesObj = {
+  dashboard: {
+    path: "dashboard",
+    subRoutes: {
+      analytics: {
+        path: "analytics",
+        subRoutes: {
+          byDate: { path: ":date" },
+        },
+      },
+    },
+  },
+};
+
+const appRoutes = createRoutePaths(routesObj);
+
+// Extract type of route params
+type AnalyticsRouteParams =
+  typeof appRoutes.dashboard.analytics.byDate._routeParams;
+// -> { date: string; }
 ```
