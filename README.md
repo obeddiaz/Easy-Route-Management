@@ -8,10 +8,13 @@ Managing routes manually can quickly become cumbersome as your app grows. Easy R
 
 ## Features
 
-- Define nested routes in a single object.
-- Automatically generate paths with dynamic parameters.
-- Works with any framework or library that uses paths.
-- Type-safe: ensures only valid routes and parameters are used.
+- ✅ Define nested routes in a single object.
+- 🔄 Automatically generate paths with dynamic parameters.
+- 🧠 Type-safe: ensures only valid routes and parameters are used.
+- 🚫 Prevents access to undefined routes.
+- ⚙️ Works with any framework or library that uses paths.
+
+---
 
 ---
 
@@ -21,3 +24,147 @@ Managing routes manually can quickly become cumbersome as your app grows. Easy R
 npm install easy-route-management
 # or
 yarn add easy-route-management
+```
+
+## Usage
+
+```ts
+
+import createRoutePaths, { RouteObjInterface } from 'easy-route-management';
+
+const routesObj = {
+  user: {
+    path: 'user',
+    subRoutes: {
+      settings: {
+        path: 'settings',
+      },
+    },
+  },
+  posts: {
+    path: 'posts',
+    subRoutes: {
+      byId: {
+        path: ':postId',
+      },
+    },
+  },
+} as const satisfies RouteObjInterface;
+
+const appRoutes = createRoutePaths(routesObj);
+```
+
+### Usage with React rotuer
+
+```tsx
+<Route path={appRoutes.user.path} />
+<Route path={appRoutes.user.settings.path} />
+<Route path={appRoutes.posts.path} />
+<Route path={appRoutes.posts.byId.path} />
+```
+
+### Navigate
+
+```tsx
+navigate(appRoutes.user.path); // '/user'
+navigate(appRoutes.posts.byId.generatePath({ postId: '123' })); // '/posts/123'
+```
+
+### Type Safety
+
+- If you forget to pass a required parameter, TypeScript will throw an error.
+- If you try to access a route that doesn't exist, you'll get a compile-time error:
+
+```ts
+navigate(appRoutes.notExistingRoute.path); // ❌ Error: Property 'notExistingRoute' does not exist
+```
+
+### Express.js examples
+
+```ts
+
+import express from 'express';
+import createRoutePaths from 'easy-route-management';
+
+const routesObj = {
+  user: {
+    path: 'user',
+    subRoutes: {
+      settings: {
+        path: 'settings',
+      },
+    },
+  },
+  posts: {
+    path: 'posts',
+    subRoutes: {
+      byId: {
+        path: ':postId',
+      },
+    },
+  },
+};
+
+
+const appRoutes = createRoutePaths(routesObj);
+const app = express();
+```
+
+### Use in Express Route Handlers
+
+```ts
+
+app.get(appRoutes.user.path, (req, res) => {
+  res.send('User Home');
+});
+
+app.get(appRoutes.user.settings.path, (req, res) => {
+  res.send('User Settings');
+});
+
+app.get(appRoutes.posts.path, (req, res) => {
+  res.send('Posts List');
+});
+
+app.get(appRoutes.posts.byId.path, (req, res) => {
+  const { postId } = req.params;
+  res.send(`Post Details for ID: ${postId}`);
+});
+```
+
+## Extended Examples
+
+```ts
+
+const routesObj = {
+  dashboard: {
+    path: 'dashboard',
+    subRoutes: {
+      analytics: {
+        path: 'analytics',
+        subRoutes: {
+          byDate: {
+            path: ':date',
+          },
+        },
+      },
+    },
+  },
+};
+
+const appRoutes = createRoutePaths(routesObj);
+
+navigate(appRoutes.dashboard.analytics.byDate.generatePath({ date: '2025-10-01' }));
+// Result: '/dashboard/analytics/2025-10-01'
+```
+
+### Error handling
+
+```ts
+
+// Missing parameter
+appRoutes.dashboard.analytics.byDate.generatePath(); // ❌ TypeScript error
+
+// Accessing undefined route
+navigate(appRoutes.dashboard.reports); // ❌ Property 'reports' does not exist
+```
