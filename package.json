@@ -1,9 +1,19 @@
 {
   "name": "easy-route-management",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "keywords": [
+    "routes",
+    "routing",
+    "react-router",
+    "express",
+    "angular",
+    "typescript",
+    "path-management",
+    "nested-routes"
+  ],
   "files": [
     "dist"
   ],

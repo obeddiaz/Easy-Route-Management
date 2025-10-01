@@ -55,7 +55,7 @@ type RouteParams<T extends string, V extends Record<string, readonly string[]> |
     [K in P]?: V extends Record<P, readonly string[]> ? V[P][number] : string;
 } : {
     [K in Param]: V extends Record<Param, readonly string[]> ? V[Param][number] : string;
-} : {};
+} : null;
 type GeneratePathFunction<T extends string, V extends Record<string, readonly string[]> | undefined> = (params: RouteParams<T, V>) => string;
 interface RouteWithGeneratePath<P extends string, SP extends string, V extends Record<string, readonly string[]> | undefined> {
     /**
@@ -108,15 +108,15 @@ interface RouteWithoutGeneratePath<P extends string, SP extends string> {
     sectionPath: SP;
 }
 type Route<P extends string, SP extends string, V extends Record<string, readonly string[]> | undefined> = RouteParams<P, V> extends null ? RouteWithoutGeneratePath<P, SP> : RouteWithGeneratePath<P, SP, V>;
-type InferRoutes<T, ParentPath extends string = '', V extends Record<string, readonly string[]> | undefined = undefined> = {
+type InferRoutes<T, ParentPath extends string = "", V extends Record<string, readonly string[]> | undefined = undefined> = {
     [K in keyof T]: T[K] extends {
         path: string;
         subRoutes: unknown;
         acceptedPathValues?: Record<string, readonly string[]>;
-    } ? Route<`${ParentPath}/${T[K]['path']}`, T[K]['path'], V & T[K]['acceptedPathValues']> & InferRoutes<T[K]['subRoutes'], `${ParentPath}/${T[K]['path']}`, V extends Record<string, readonly string[]> ? V & T[K]['acceptedPathValues'] : T[K]['acceptedPathValues']> : T[K] extends {
+    } ? Route<`${ParentPath}/${T[K]["path"]}`, T[K]["path"], V & T[K]["acceptedPathValues"]> & InferRoutes<T[K]["subRoutes"], `${ParentPath}/${T[K]["path"]}`, V extends Record<string, readonly string[]> ? V & T[K]["acceptedPathValues"] : T[K]["acceptedPathValues"]> : T[K] extends {
         path: string;
         acceptedPathValues?: Record<string, readonly string[]>;
-    } ? Route<`${ParentPath}/${T[K]['path']}`, T[K]['path'], V & T[K]['acceptedPathValues']> : never;
+    } ? Route<`${ParentPath}/${T[K]["path"]}`, T[K]["path"], V & T[K]["acceptedPathValues"]> : never;
 };
 declare const createRoutePaths: <T extends RouteObjInterface>(routesObj: T) => InferRoutes<T>;
 export default createRoutePaths;
