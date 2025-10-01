@@ -85,7 +85,7 @@ type RouteParams<
             ? V[Param][number]
             : string;
         }
-    : {};
+    : null;
 
 type GeneratePathFunction<
   T extends string,
@@ -191,6 +191,12 @@ type InferRoutes<
       : never;
 };
 
+/**
+ * Check if the route has params, so we define generatePath funciton to the object.
+ * @param {string} s The first number.
+ *
+ * @return {boolean} The sum of the two numbers.
+ */
 function checkRouteParams(s: string) {
   const pattern = /^\/([^/]+\/)*:[^/]+(\/[^/]+)*$/;
   return pattern.test(s);
@@ -229,7 +235,7 @@ const generateRouteParams = (
   }
   if (routeHasParams) {
     routes.generatePath = (params: { [key: string]: string } = {}): string => {
-      let path = routes.path;
+      const { path } = routes;
       return path
         .replace(/:([^/?]+)\??/g, (_, key) => {
           if (params[key] != null) {
