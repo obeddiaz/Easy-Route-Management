@@ -47,13 +47,15 @@ export type RouteObjInterface = {
         acceptedPathValues?: Record<string, readonly string[]> & NotAllowedRouteObjParams;
     };
 } & NotAllowedRouteObjParams;
-type RouteParams<T extends string, V extends Record<string, readonly string[]> | undefined> = T extends `${infer _Start}:${infer Param}/${infer Rest}` ? {
-    [K in Param | keyof RouteParams<Rest, V>]: V extends Record<K, readonly string[]> ? V[K][number] : string;
-} : T extends `${infer _Start}:${infer Param}` ? V extends Record<string, readonly string[]> ? {
-    [K in Param]: V[Param][number];
+type RouteParams<T extends string, V extends Record<string, readonly string[]> | undefined = undefined> = T extends `${infer _Start}:${infer Param}/${infer Rest}` ? Param extends `${infer P}?` ? {
+    [K in P | keyof RouteParams<Rest, V>]: K extends P ? V extends Record<K, readonly string[]> ? V[K][number] | undefined : string | undefined : K extends keyof RouteParams<Rest, V> ? RouteParams<Rest, V>[K] : never;
 } : {
-    [K in Param]: string;
-} : null;
+    [K in Param | keyof RouteParams<Rest, V>]: K extends Param ? V extends Record<K, readonly string[]> ? V[K][number] : string : K extends keyof RouteParams<Rest, V> ? RouteParams<Rest, V>[K] : never;
+} : T extends `${infer _Start}:${infer Param}` ? Param extends `${infer P}?` ? {
+    [K in P]?: V extends Record<P, readonly string[]> ? V[P][number] : string;
+} : {
+    [K in Param]: V extends Record<Param, readonly string[]> ? V[Param][number] : string;
+} : {};
 type GeneratePathFunction<T extends string, V extends Record<string, readonly string[]> | undefined> = (params: RouteParams<T, V>) => string;
 interface RouteWithGeneratePath<P extends string, SP extends string, V extends Record<string, readonly string[]> | undefined> {
     /**

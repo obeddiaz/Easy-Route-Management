@@ -16,12 +16,14 @@ const generateRouteParams = (routesObj, prevPath = '', hasParams = false) => {
         });
     }
     if (routeHasParams) {
-        routes.generatePath = (params) => {
+        routes.generatePath = (params = {}) => {
             let path = routes.path;
-            for (const key in params) {
-                path = path.replace(`:${key}`, params[key]);
-            }
-            return path;
+            return path.replace(/:([^/?]+)\??/g, (_, key) => {
+                if (params[key] != null) {
+                    return params[key];
+                }
+                return "";
+            }).replace(/\/+/g, "/");
         };
     }
     return routes;
