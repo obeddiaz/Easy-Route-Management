@@ -18,8 +18,8 @@ const dummyRoutes = {
       settings: { path: 'settings' },
     },
   },
-  test: {
-    path: ':testParam?/:testParam2'
+  posts: {
+    path: 'posts/:postId?'
   }
 } as const;
 
@@ -66,5 +66,19 @@ describe('Route Management', () => {
 
   it('should generate the correct section path for about mission', () => {
     expect(routes.about.mission.sectionPath).toBe('mission');
+  });
+  
+  it('should return the correct path for posts route', () => {
+    expect(routes.posts.path).toBe('/posts/:postId?');
+  });
+
+  it('should generate the correct path for user settings route without parameters', () => {
+    const path = routes.posts.generatePath({});
+    expect(path).toBe('/posts/');
+  });
+
+  it('should generate the correct path for posts route with parameters', () => {
+    const pathWithParam = routes.posts.generatePath({ postId: '123' });
+    expect(pathWithParam).toBe('/posts/123');
   });
 });

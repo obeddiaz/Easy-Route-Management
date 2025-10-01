@@ -89,24 +89,6 @@ type RouteParams<
         }
     : {}
 
-//  type RouteParams<
-//   T extends string,
-//   V extends Record<string, readonly string[]> | undefined,
-// > = T extends `${infer _Start}:${infer Param}/${infer Rest}`
-//   ? {
-//       [K in Param | keyof RouteParams<Rest, V>]: V extends Record<
-//         K,
-//         readonly string[]
-//       >
-//         ? V[K][number]
-//         : string;
-//     }
-//   : T extends `${infer _Start}:${infer Param}`
-//     ? V extends Record<string, readonly string[]>
-//       ? { [K in Param]: V[Param][number] }
-//       : { [K in Param]: string }
-//     : null;
-
 type GeneratePathFunction<
   T extends string,
   V extends Record<string, readonly string[]> | undefined,
@@ -248,12 +230,14 @@ const generateRouteParams = (
     });
   }
   if (routeHasParams) {
-    routes.generatePath = (params: { [key: string]: string }): string => {
+    routes.generatePath = (params: { [key: string]: string } = {}): string => {
       let path = routes.path;
-      for (const key in params) {
-        path = path.replace(`:${key}`, params[key]);
-      }
-      return path;
+      return path.replace(/:([^/?]+)\??/g, (_, key) => {
+          if (params[key] != null) {
+          return params[key];
+          }
+          return "";
+      }).replace(/\/+/g, "/");
     };
   }
   return routes;
