@@ -193,9 +193,9 @@ type InferRoutes<
 
 /**
  * Check if the route has params, so we define generatePath funciton to the object.
- * @param {string} s The first number.
+ * @param {string} s route path
  *
- * @return {boolean} The sum of the two numbers.
+ * @return {boolean} if the route has route params return true, otherwise false
  */
 function checkRouteParams(s: string) {
   const pattern = /^\/([^/]+\/)*:[^/]+(\/[^/]+)*$/;

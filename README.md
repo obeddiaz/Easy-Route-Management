@@ -51,6 +51,12 @@ const routesObj = {
 const appRoutes = createRoutePaths(routesObj);
 ```
 
+### 🧠 IntelliSense Preview
+
+Here's how route generation looks in VS Code with full type safety:
+
+![Intellisense Preview](https://github.com/obeddiaz/Easy-Route-Management/raw/master/assets/intellisense-example.png "Preview")
+
 ### Quick Example
 
 ```ts
