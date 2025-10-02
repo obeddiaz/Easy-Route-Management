@@ -198,3 +198,16 @@ type AnalyticsRouteParams =
   typeof appRoutes.dashboard.analytics.byDate._routeParams;
 // -> { date: string; }
 ```
+
+---
+
+## 📬 Feedback
+
+Have ideas, questions, or suggestions?  
+Feel free to [start a discussion](https://github.com/obeddiaz/Easy-Route-Management/discussions) or [open an issue](https://github.com/obeddiaz/Easy-Route-Management/issues) on GitHub.  
+Your feedback helps me to improve Easy Route Management for everyone!
+
+## 🔗 GitHub Repository
+
+You can find the source code, report issues, or contribute here:
+[Repository](https://github.com/obeddiaz/Easy-Route-Management)

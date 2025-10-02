@@ -1,9 +1,13 @@
 {
   "name": "easy-route-management",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "description": "Type-safe route management for JavaScript and TypeScript apps. Define nested routes in a single object and generate dynamic paths with parameters for React Router, Express, Angular, or any framework that uses paths.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/obeddiaz/Easy-Route-Management.git"
+  },
   "keywords": [
     "routes",
     "routing",
