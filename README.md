@@ -65,7 +65,9 @@ const postId = "123";
 navigate(`/posts/${postId}`);
 
 // After: Type-safe and dynamic
-navigate(appRoutes.posts.byId.generatePath({ postId }));
+import { generatePath } from "easy-route-management";
+
+navigate(generatePath(appRoutes.posts.byId.path, { postId }));
 ```
 
 ### Usage with React rotuer
@@ -80,8 +82,10 @@ navigate(appRoutes.posts.byId.generatePath({ postId }));
 ### Navigate
 
 ```tsx
+import { generatePath } from "easy-route-management";
+
 navigate(appRoutes.user.path); // '/user'
-navigate(appRoutes.posts.byId.generatePath({ postId: "123" })); // '/posts/123'
+navigate(generatePath(appRoutes.posts.byId.path, { postId: "123" })); // '/posts/123'
 ```
 
 ### Type Safety
@@ -146,6 +150,8 @@ app.get(appRoutes.posts.byId.path, (req, res) => {
 ## Extended Examples
 
 ```ts
+import { generatePath } from "easy-route-management";
+
 const routesObj = {
   dashboard: {
     path: "dashboard",
@@ -165,7 +171,7 @@ const routesObj = {
 const appRoutes = createRoutePaths(routesObj);
 
 navigate(
-  appRoutes.dashboard.analytics.byDate.generatePath({ date: "2025-10-01" }),
+  generatePath(appRoutes.dashboard.analytics.byDate.path, { date: "2025-10-01" }),
 );
 // Result: '/dashboard/analytics/2025-10-01'
 ```
@@ -174,10 +180,10 @@ navigate(
 
 ```ts
 // Missing parameter
-appRoutes.dashboard.analytics.byDate.generatePath(); // ❌ TypeScript error
+navigate(generatePath(appRoutes.dashboard.analytics.byDate.path, {})); // ❌ TypeScript error
 
 // Accessing undefined route
-navigate(appRoutes.dashboard.reports); // ❌ Property 'reports' does not exist
+navigate(appRoutes.dashboard.reports.path); // ❌ Property 'reports' does not exist
 ```
 
 ### Extracting Route Parameter Types

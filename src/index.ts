@@ -127,6 +127,7 @@ interface RouteWithGeneratePath<
    * @returns The full path with the parameters replaced.
    * @example
    * routes.myRoute.byId.generatePath({ pathId: '15' }) // returns "/my-route/15"
+   * @deprecated Import `generatePath` from package instead
    */
   generatePath: GeneratePathFunction<P, V>;
 }
@@ -192,6 +193,34 @@ type InferRoutes<
 };
 
 /**
+ * Builds a route by replacing dynamic parameters (e.g. `:id`) with their values.
+ * @example
+ * generatePath(routes.posts.byId.path, { postId: '123' })
+ * // => '/posts/123'
+ *
+ * @param {string} path Base route containing dynamic parameters (e.g. `/users/:id`).
+ * @param {object} params Key/value pairs with parameter names and their values.
+ *
+ * @return {string} The resulting path with parameters replaced.
+ */
+const generatePath = <P extends string>(
+  path: P,
+  params: RouteParams<P, Record<string, readonly string[]>>,
+): string => {
+  if (!params) {
+    return path;
+  }
+  return path
+    .replace(/:([^/?]+)\??/g, (_, key: string) => {
+      if (params[key] != null) {
+        return params[key];
+      }
+      return "";
+    })
+    .replace(/\/+/g, "/");
+};
+
+/**
  * Check if the route has params, so we define generatePath funciton to the object.
  * @param {string} s route path
  *
@@ -234,16 +263,10 @@ const generateRouteParams = (
     });
   }
   if (routeHasParams) {
-    routes.generatePath = (params: { [key: string]: string } = {}): string => {
+    routes.generatePath = (params: Record<string, string> = {}): string => {
       const { path } = routes;
-      return path
-        .replace(/:([^/?]+)\??/g, (_, key) => {
-          if (params[key] != null) {
-            return params[key];
-          }
-          return "";
-        })
-        .replace(/\/+/g, "/");
+      // @ts-expect-error Params will be infered automatically with the given path
+      return generatePath(path, params);
     };
   }
   return routes;
@@ -258,5 +281,7 @@ const createRoutePaths = <T extends RouteObjInterface>(
   });
   return routes as InferRoutes<T>;
 };
+
+export { generatePath };
 
 export default createRoutePaths;

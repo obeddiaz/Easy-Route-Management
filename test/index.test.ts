@@ -1,4 +1,4 @@
-import createRoutePaths, { RouteObjInterface } from "../src";
+import createRoutePaths, { RouteObjInterface, generatePath } from "../src";
 
 const dummyRoutes = {
   home: {
@@ -47,7 +47,7 @@ describe("Route Management", () => {
   });
 
   it("should generate the correct path for user profile route with parameters", () => {
-    const path = routes.user.profile.generatePath({ userId: "123" });
+    const path = generatePath(routes.user.profile.path, { userId: "123" });
     expect(path).toBe("/user/123/profile");
   });
 
@@ -56,7 +56,7 @@ describe("Route Management", () => {
   });
 
   it("should generate the correct path for user settings route with parameters", () => {
-    const path = routes.user.settings.generatePath({ userId: "123" });
+    const path = generatePath(routes.user.settings.path, { userId: "123" });
     expect(path).toBe("/user/123/settings");
   });
 
@@ -73,12 +73,12 @@ describe("Route Management", () => {
   });
 
   it("should generate the correct path for user settings route without parameters", () => {
-    const path = routes.posts.generatePath({});
+    const path = generatePath(routes.posts.path, { postId: undefined });
     expect(path).toBe("/posts/");
   });
 
   it("should generate the correct path for posts route with parameters", () => {
-    const pathWithParam = routes.posts.generatePath({ postId: "123" });
+    const pathWithParam = generatePath(routes.posts.path, { postId: "123" });
     expect(pathWithParam).toBe("/posts/123");
   });
 });
