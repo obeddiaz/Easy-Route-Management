@@ -87,11 +87,6 @@ type RouteParams<
         }
     : null;
 
-type GeneratePathFunction<
-  T extends string,
-  V extends Record<string, readonly string[]> | undefined,
-> = (params: RouteParams<T, V>) => string;
-
 interface RouteWithGeneratePath<
   P extends string,
   SP extends string,
@@ -121,15 +116,6 @@ interface RouteWithGeneratePath<
    * routes.myRoute.byId.sectionPath // returns "/:pathId"
    */
   sectionPath: SP;
-  /**
-   * Generates the full path with the given parameters.
-   * @param params - An object containing the parameters to replace in the path.
-   * @returns The full path with the parameters replaced.
-   * @example
-   * routes.myRoute.byId.generatePath({ pathId: '15' }) // returns "/my-route/15"
-   * @deprecated Import `generatePath` from package instead
-   */
-  generatePath: GeneratePathFunction<P, V>;
 }
 
 interface RouteWithoutGeneratePath<P extends string, SP extends string> {
@@ -193,43 +179,61 @@ type InferRoutes<
 };
 
 /**
- * Builds a route by replacing dynamic parameters (e.g. `:id`) with their values.
+ * Generates a full route path by replacing dynamic segments (e.g. `:userId`)
+ * in a route definition with their corresponding parameter values.
+ *
+ * This function preserves type safety when used with route objects created
+ * by `createRoutePaths()`, inferring the correct parameter names and accepted values.
+ *
  * @example
- * generatePath(routes.posts.byId.path, { postId: '123' })
- * // => '/posts/123'
+ * // Example using a route object
+ * generatePath(routes.user.bySection, { userId: '123', section: 'section1' });
+ * // => '/user/123/section1'
  *
- * @param {string} path Base route containing dynamic parameters (e.g. `/users/:id`).
- * @param {object} params Key/value pairs with parameter names and their values.
+ * @param {object} route - The route object returned by `createRoutePaths()`.
+ * Must include a `path` property (and optional `_routeParams` type metadata).
+ * @param {object} [params] - Key/value pairs mapping route parameter names
+ * to their corresponding string values.
  *
- * @return {string} The resulting path with parameters replaced.
+ * @return {string} The resolved path with all parameters substituted.
+ *
+ * @throws {Error} If the provided route object is invalid or not compatible.
  */
-const generatePath = <P extends string>(
-  path: P,
-  params: RouteParams<P, Record<string, readonly string[]>>,
+const generatePath = <
+  P extends { path: string; _routeParams?: Record<string, string> },
+>(
+  route: P,
+  params?: P["_routeParams"],
 ): string => {
-  if (!params) {
-    return path;
+  if (
+    typeof route !== "object" ||
+    route === null ||
+    typeof route.path !== "string"
+  ) {
+    throw new Error(
+      "[easy-route-management] Invalid route object: expected an object with a `path` string.",
+    );
   }
-  return path
+
+  if (params && typeof params !== "object") {
+    throw new Error(
+      "[easy-route-management] Invalid params: expected an object mapping route params to values.",
+    );
+  }
+
+  if (!params) {
+    return route.path;
+  }
+
+  return route.path
     .replace(/:([^/?]+)\??/g, (_, key: string) => {
       if (params[key] != null) {
-        return params[key];
+        return encodeURIComponent(params[key]);
       }
       return "";
     })
     .replace(/\/+/g, "/");
 };
-
-/**
- * Check if the route has params, so we define generatePath funciton to the object.
- * @param {string} s route path
- *
- * @return {boolean} if the route has route params return true, otherwise false
- */
-function checkRouteParams(s: string) {
-  const pattern = /^\/([^/]+\/)*:[^/]+(\/[^/]+)*$/;
-  return pattern.test(s);
-}
 
 type GenericRouteType = {
   path: string;
@@ -246,28 +250,18 @@ type GenericRouteType = {
 const generateRouteParams = (
   routesObj: RouteObjInterface[string],
   prevPath = "",
-  hasParams = false,
 ): GenericRouteType => {
   const routes: GenericRouteType = {
     path: `${prevPath}/${routesObj.path}`,
     sectionPath: routesObj.path,
   };
-  const routeHasParams = hasParams || checkRouteParams(routes.path);
   if (routesObj.subRoutes) {
     Object.keys(routesObj.subRoutes).forEach((key) => {
       routes[key] = generateRouteParams(
         routesObj!.subRoutes![key],
         routes.path,
-        routeHasParams,
       );
     });
-  }
-  if (routeHasParams) {
-    routes.generatePath = (params: Record<string, string> = {}): string => {
-      const { path } = routes;
-      // @ts-expect-error Params will be infered automatically with the given path
-      return generatePath(path, params);
-    };
   }
   return routes;
 };

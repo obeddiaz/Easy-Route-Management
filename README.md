@@ -13,6 +13,7 @@ Managing routes manually can quickly become cumbersome as your app grows. Easy R
 - 🧠 Type-safe: ensures only valid routes and parameters are used.
 - 🚫 Prevents access to undefined routes.
 - ⚙️ Works with any framework or library that uses paths.
+- 🔒 Automatically URL-encodes parameter values.
 
 ---
 
@@ -27,7 +28,7 @@ yarn add easy-route-management
 ## Usage
 
 ```ts
-import createRoutePaths, { RouteObjInterface } from "easy-route-management";
+import createRoutePaths, { RouteObjInterface, generatePath } from "easy-route-management";
 
 const routesObj = {
   user: {
@@ -49,13 +50,50 @@ const routesObj = {
 } as const satisfies RouteObjInterface;
 
 const appRoutes = createRoutePaths(routesObj);
+
+// Example usage:
+appRoutes.posts.path
+// => "/posts"
+appRoutes.posts.byId.path
+// => "/posts/:postId"
+generatePath(appRoutes.posts.byId, { postId: "123" });
+// => "/posts/123"
+
+appRoutes.user.settings.path
+// => "/user/settings"
 ```
 
-### 🧠 IntelliSense Preview
+### 🧩 Accepted Path Values
 
-Here's how route generation looks in VS Code with full type safety:
+You can define a list of accepted values for dynamic segments using acceptedPathValues.
+This gives you stricter type safety and better IntelliSense.
 
-![Intellisense Preview](https://github.com/obeddiaz/Easy-Route-Management/raw/master/assets/intellisense-example.png "Preview")
+```ts
+const routesObj = {
+  user: {
+    path: "user/:userId",
+    subRoutes: {
+      bySection: {
+        path: ":section",
+        acceptedPathValues: {
+          section: ["overview", "settings", "activity"],
+        },
+      },
+    },
+  },
+} as const satisfies RouteObjInterface;
+
+const routes = createRoutePaths(routesObj);
+
+// ✅ Correct usage
+generatePath(routes.user.bySection, { userId: "42", section: "overview" });
+
+// ❌ TypeScript error — "profile" is not an accepted value
+generatePath(routes.user.bySection, { userId: "42", section: "profile" });
+```
+
+For non-TypeScript users, invalid `acceptedPathValues` will not throw an error at runtime.
+These restrictions are meant primarily for TypeScript compile-time safety.
 
 ### Quick Example
 
@@ -67,10 +105,18 @@ navigate(`/posts/${postId}`);
 // After: Type-safe and dynamic
 import { generatePath } from "easy-route-management";
 
-navigate(generatePath(appRoutes.posts.byId.path, { postId }));
+navigate(generatePath(appRoutes.posts.byId, { postId }));
 ```
 
-### Usage with React rotuer
+### 🧠 IntelliSense Preview
+
+Here's how route generation looks in VS Code with full type safety:
+
+![Intellisense Preview](https://github.com/obeddiaz/Easy-Route-Management/raw/master/assets/intellisense-example.png "Preview")
+
+### 🧭 Examples by Framework
+
+### React Router
 
 ```tsx
 <Route path={appRoutes.user.path} />
@@ -79,25 +125,16 @@ navigate(generatePath(appRoutes.posts.byId.path, { postId }));
 <Route path={appRoutes.posts.byId.path} />
 ```
 
-### Navigate
+### React Navigation Example
 
 ```tsx
 import { generatePath } from "easy-route-management";
 
 navigate(appRoutes.user.path); // '/user'
-navigate(generatePath(appRoutes.posts.byId.path, { postId: "123" })); // '/posts/123'
+navigate(generatePath(appRoutes.posts.byId, { postId: "123" })); // '/posts/123'
 ```
 
-### Type Safety
-
-- If you forget to pass a required parameter, TypeScript will throw an error.
-- If you try to access a route that doesn't exist, you'll get a compile-time error:
-
-```ts
-navigate(appRoutes.notExistingRoute.path); // ❌ Error: Property 'notExistingRoute' does not exist
-```
-
-### Express.js examples
+### Express.js Examples
 
 ```ts
 import express from "express";
@@ -124,11 +161,7 @@ const routesObj = {
 
 const appRoutes = createRoutePaths(routesObj);
 const app = express();
-```
 
-### Use in Express Route Handlers
-
-```ts
 app.get(appRoutes.user.path, (req, res) => {
   res.send("User Home");
 });
@@ -145,6 +178,17 @@ app.get(appRoutes.posts.byId.path, (req, res) => {
   const { postId } = req.params;
   res.send(`Post Details for ID: ${postId}`);
 });
+```
+
+### 🧠 Type Safety Highlights
+
+- **Inferred parameter types:** TypeScript automatically infers required params.
+- **Compile-time safety:** Accessing invalid routes or missing params triggers TypeScript errors.
+- **Optional parameters:** Paths ending with ? are inferred as optional automatically.
+
+```ts
+generatePath(routes.posts.byId, {}); // ❌ Missing "postId"
+generatePath(routes.posts.byId, { postId: "123" }); // ✅
 ```
 
 ## Extended Examples
@@ -171,16 +215,16 @@ const routesObj = {
 const appRoutes = createRoutePaths(routesObj);
 
 navigate(
-  generatePath(appRoutes.dashboard.analytics.byDate.path, { date: "2025-10-01" }),
+  generatePath(appRoutes.dashboard.analytics.byDate, { date: "2025-10-01" }),
 );
-// Result: '/dashboard/analytics/2025-10-01'
+// Result: "/dashboard/analytics/2025-10-01"
 ```
 
 ### Error handling
 
 ```ts
 // Missing parameter
-navigate(generatePath(appRoutes.dashboard.analytics.byDate.path, {})); // ❌ TypeScript error
+navigate(generatePath(appRoutes.dashboard.analytics.byDate, {})); // ❌ TypeScript error
 
 // Accessing undefined route
 navigate(appRoutes.dashboard.reports.path); // ❌ Property 'reports' does not exist
@@ -210,6 +254,41 @@ type AnalyticsRouteParams =
   typeof appRoutes.dashboard.analytics.byDate._routeParams;
 // -> { date: string; }
 ```
+
+---
+
+## ⚠️ Known Limitations
+
+- Reusing the same parameter name across nested routes (e.g., `:id` in both parent and child routes)
+  currently produces duplicate segments such as `/post/:id/:id`.
+
+  ```ts
+  const routesObj = {
+    post: {
+      path: "post/:id",
+      subRoutes: {
+        byId: { path: ":id" },
+      },
+    },
+  };
+  // Result: '/post/:id/:id'
+  ```
+
+Workaround: use unique parameter names in nested routes (e.g., `:postId`, `:commentId`).
+These limitations will be addressed in a future update.
+
+---
+
+## 🧾 Changelog Summary (v1.2.0)
+
+- **Breaking changes:**
+  - Removed `generatePath` from route objects.
+  - Use the standalone `generatePath(routeObject, params)` instead.
+- **Improvements:**
+  - `generatePath()` now accepts the route object directly.
+  - Automatically infers types from `acceptedPathValues`.
+  - Parameters are now URL-encoded with `encodeURIComponent`.
+  - Runtime validation for invalid route objects.
 
 ---
 
