@@ -87,7 +87,7 @@ type RouteParams<
         }
     : null;
 
-interface RouteWithGeneratePath<
+interface RouteWithRouteParams<
   P extends string,
   SP extends string,
   V extends Record<string, readonly string[]> | undefined,
@@ -118,7 +118,7 @@ interface RouteWithGeneratePath<
   sectionPath: SP;
 }
 
-interface RouteWithoutGeneratePath<P extends string, SP extends string> {
+interface RouteWithoutRouteParams<P extends string, SP extends string> {
   /**
    * The full path of the route.
    * @example
@@ -141,8 +141,14 @@ type Route<
   V extends Record<string, readonly string[]> | undefined,
 > =
   RouteParams<P, V> extends null
-    ? RouteWithoutGeneratePath<P, SP>
-    : RouteWithGeneratePath<P, SP, V>;
+    ? RouteWithoutRouteParams<P, SP>
+    : RouteWithRouteParams<P, SP, V>;
+
+type StripAsRelative<T> = {
+  [K in keyof T as K extends "asRelative" ? never : K]: T[K] extends object
+    ? StripAsRelative<T[K]>
+    : T[K];
+};
 
 type InferRoutes<
   T,
@@ -165,7 +171,20 @@ type InferRoutes<
           V extends Record<string, readonly string[]>
             ? V & T[K]["acceptedPathValues"]
             : T[K]["acceptedPathValues"]
-        >
+        > & {
+          asRelative: () => Route<
+            `/${T[K]["path"]}`,
+            T[K]["path"],
+            T[K]["acceptedPathValues"]
+          > &
+            StripAsRelative<
+              InferRoutes<
+                T[K]["subRoutes"],
+                `/${T[K]["path"]}`,
+                T[K]["acceptedPathValues"]
+              >
+            >;
+        }
     : T[K] extends {
           path: string;
           acceptedPathValues?: Record<string, readonly string[]>;
@@ -174,7 +193,13 @@ type InferRoutes<
           `${ParentPath}/${T[K]["path"]}`,
           T[K]["path"],
           V & T[K]["acceptedPathValues"]
-        >
+        > & {
+          asRelative: () => Route<
+            `/${T[K]["path"]}`,
+            T[K]["path"],
+            T[K]["acceptedPathValues"]
+          >;
+        }
       : never;
 };
 
@@ -203,7 +228,7 @@ const generatePath = <
   P extends { path: string; _routeParams?: Record<string, string> },
 >(
   route: P,
-  params?: P["_routeParams"],
+  params: P["_routeParams"],
 ): P["path"] => {
   if (
     typeof route !== "object" ||
@@ -238,7 +263,7 @@ const generatePath = <
 type GenericRouteType = {
   path: string;
   sectionPath: string;
-  generatePath?: (params: { [key: string]: string }) => string;
+  asRelative?: () => Omit<GenericRouteType, "asRelative">;
 } & {
   [key: string]:
     | GenericRouteType
@@ -250,16 +275,24 @@ type GenericRouteType = {
 const generateRouteParams = (
   routesObj: RouteObjInterface[string],
   prevPath = "",
+  isRelative = false,
 ): GenericRouteType => {
   const routes: GenericRouteType = {
     path: `${prevPath}/${routesObj.path}`,
     sectionPath: routesObj.path,
   };
+
+  if (!isRelative) {
+    routes.asRelative = () => {
+      return generateRouteParams(routesObj, "", true);
+    };
+  }
   if (routesObj.subRoutes) {
     Object.keys(routesObj.subRoutes).forEach((key) => {
       routes[key] = generateRouteParams(
         routesObj!.subRoutes![key],
         routes.path,
+        isRelative,
       );
     });
   }
