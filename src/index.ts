@@ -204,7 +204,7 @@ const generatePath = <
 >(
   route: P,
   params?: P["_routeParams"],
-): string => {
+): P["path"] => {
   if (
     typeof route !== "object" ||
     route === null ||

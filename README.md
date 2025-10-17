@@ -290,6 +290,12 @@ These limitations will be addressed in a future update.
   - Parameters are now URL-encoded with `encodeURIComponent`.
   - Runtime validation for invalid route objects.
 
+## 🧾 Changelog Summary (v1.3.0)
+
+- Added full support for both `import` and `require`.
+- Fixed issue where `require("easy-route-management")` returned an object instead of the main function.
+- No API changes — existing imports continue to work.
+
 ---
 
 ## 📬 Feedback

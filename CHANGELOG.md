@@ -34,3 +34,14 @@
 - Correctly infers `acceptedPathValues` when using `generatePath()`.
 - Adds runtime validation for invalid route objects.
 - Automatically URL-encodes parameter values using encodeURIComponent.
+
+## [1.3.0] — Dual ESM + CJS Build Support
+
+### ✨ Added
+
+- Dual build setup (ESM + CommonJS) for better compatibility across Node and frontend environments.
+
+### 🧰 Improved
+
+- `require("easy-route-management")` now returns the function directly.
+- `import createRoutePaths` remains unchanged for ESM users.
