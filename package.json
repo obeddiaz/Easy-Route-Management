@@ -1,6 +1,6 @@
 {
   "name": "easy-route-management",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "description": "Type-safe route management for JavaScript and TypeScript apps. Define nested routes in a single object and generate dynamic paths with parameters for React Router, Express, Angular, or any framework that uses paths.",
   "main": "./dist/cjs/index.cjs.js",
   "module": "./dist/esm/index.js",

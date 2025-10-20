@@ -116,14 +116,15 @@ describe("Route Management", () => {
     const path = generatePath(routes.user, { userId: "a b/c" });
     expect(path).toBe("/user/a%20b%2Fc");
   });
-  it("asRelative fn", () => {
-    const relativeToUser = routes.user.settings.asRelative().byId.path;
+
+  it("should return a path relative to the current route when using .relative()", () => {
+    const relativeToUser = routes.user.settings.relative().byId.path;
     expect(relativeToUser).toBe("/settings/:settingId");
   });
 
-  it("asRelative generatePath", () => {
+  it("should generate the correct path when using .relative() with generatePath", () => {
     const settingsWithoutUserId = generatePath(
-      routes.user.settings.asRelative().byId,
+      routes.user.settings.relative().byId,
       {
         settingId: "1234",
       },

@@ -45,3 +45,16 @@
 
 - `require("easy-route-management")` now returns the function directly.
 - `import createRoutePaths` remains unchanged for ESM users.
+
+## [1.4.0] — Add `.relative()` method
+
+### ✨ Added
+
+- New `.relative()` method to obtain route paths relative to the current node.  
+  Useful for frameworks like React Router or Angular that require nested relative paths.
+
+  ```ts
+  routes.user.settings.path                   // => "/user/settings"
+  routes.user.settings.relative().path        // => "/settings"
+  routes.user.settings.relative().byId.path   // => "/settings/:id"
+  ```

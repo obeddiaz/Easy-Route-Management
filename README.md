@@ -14,6 +14,7 @@ Managing routes manually can quickly become cumbersome as your app grows. Easy R
 - 🚫 Prevents access to undefined routes.
 - ⚙️ Works with any framework or library that uses paths.
 - 🔒 Automatically URL-encodes parameter values.
+- 🧭 **New:** Easily get relative paths using .relative()
 
 ---
 
@@ -62,6 +63,53 @@ generatePath(appRoutes.posts.byId, { postId: "123" });
 appRoutes.user.settings.path
 // => "/user/settings"
 ```
+
+### 🧭 New: .relative()
+
+The .relative() method returns a new route object starting from the current level, ignoring any parent path segments.
+This is especially useful for frameworks like React Router or Angular, where nested routes already inherit their parent’s path.
+
+```ts
+const routesObj = {
+  user: {
+    path: "user",
+    subRoutes: {
+      settings: {
+        path: "settings",
+        subRoutes: {
+          byId: { path: ":settingId" },
+        },
+      },
+    },
+  },
+} as const satisfies RouteObjInterface;
+
+const routes = createRoutePaths(routesObj);
+
+routes.user.settings.path
+// => "/user/settings"
+
+routes.user.settings.relative().path
+// => "/settings"
+
+routes.user.settings.relative().byId.path
+// => "/settings/:settingId"
+```
+
+#### Using with generatePath
+
+```ts
+import { generatePath } from "easy-route-management";
+
+const path = generatePath(
+  routes.user.settings.relative().byId,
+  { settingId: "1234" },
+);
+
+console.log(path);
+// => "/settings/1234"
+```
+
 
 ### 🧩 Accepted Path Values
 

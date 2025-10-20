@@ -1,7 +1,7 @@
 type NotAllowedRouteObjParams = {
   subRoutes?: never;
   path?: never;
-  generatePath?: never;
+  relative?: never;
   sectionPath?: never;
   acceptedPathValues?: never;
 };
@@ -144,9 +144,9 @@ type Route<
     ? RouteWithoutRouteParams<P, SP>
     : RouteWithRouteParams<P, SP, V>;
 
-type StripAsRelative<T> = {
-  [K in keyof T as K extends "asRelative" ? never : K]: T[K] extends object
-    ? StripAsRelative<T[K]>
+type StripRelative<T> = {
+  [K in keyof T as K extends "relative" ? never : K]: T[K] extends object
+    ? StripRelative<T[K]>
     : T[K];
 };
 
@@ -172,12 +172,12 @@ type InferRoutes<
             ? V & T[K]["acceptedPathValues"]
             : T[K]["acceptedPathValues"]
         > & {
-          asRelative: () => Route<
+          relative: () => Route<
             `/${T[K]["path"]}`,
             T[K]["path"],
             T[K]["acceptedPathValues"]
           > &
-            StripAsRelative<
+            StripRelative<
               InferRoutes<
                 T[K]["subRoutes"],
                 `/${T[K]["path"]}`,
@@ -194,7 +194,7 @@ type InferRoutes<
           T[K]["path"],
           V & T[K]["acceptedPathValues"]
         > & {
-          asRelative: () => Route<
+          relative: () => Route<
             `/${T[K]["path"]}`,
             T[K]["path"],
             T[K]["acceptedPathValues"]
@@ -263,7 +263,7 @@ const generatePath = <
 type GenericRouteType = {
   path: string;
   sectionPath: string;
-  asRelative?: () => Omit<GenericRouteType, "asRelative">;
+  relative?: () => Omit<GenericRouteType, "relative">;
 } & {
   [key: string]:
     | GenericRouteType
@@ -283,7 +283,7 @@ const generateRouteParams = (
   };
 
   if (!isRelative) {
-    routes.asRelative = () => {
+    routes.relative = () => {
       return generateRouteParams(routesObj, "", true);
     };
   }
