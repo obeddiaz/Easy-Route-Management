@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import createRoutePaths, { RouteObjInterface, generatePath } from "../src";
 
 const dummyRoutes = {
@@ -8,7 +9,9 @@ const dummyRoutes = {
     path: "about",
     subRoutes: {
       team: { path: "team" },
-      mission: { path: "mission" },
+      mission: {
+        path: "mission",
+      },
     },
   },
   user: {
@@ -112,5 +115,20 @@ describe("Route Management", () => {
   it("should encode multiple values correctly", () => {
     const path = generatePath(routes.user, { userId: "a b/c" });
     expect(path).toBe("/user/a%20b%2Fc");
+  });
+
+  it("should return a path relative to the current route when using .relative()", () => {
+    const relativeToUser = routes.user.settings.relative().byId.path;
+    expect(relativeToUser).toBe("/settings/:settingId");
+  });
+
+  it("should generate the correct path when using .relative() with generatePath", () => {
+    const settingsWithoutUserId = generatePath(
+      routes.user.settings.relative().byId,
+      {
+        settingId: "1234",
+      },
+    );
+    expect(settingsWithoutUserId).toBe("/settings/1234");
   });
 });
