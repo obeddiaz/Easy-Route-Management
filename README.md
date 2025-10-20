@@ -4,8 +4,6 @@
 
 Managing routes manually can quickly become cumbersome as your app grows. Easy Route Management allows you to define your routes in a nested object and automatically generate paths with parameters, reducing errors and making refactoring easier. It works with **React Router, Express, Angular, or any library that uses paths**.
 
----
-
 ## Features
 
 - ✅ Define nested routes in a single object.
@@ -17,7 +15,22 @@ Managing routes manually can quickly become cumbersome as your app grows. Easy R
 - 🧭 **New:** Easily get relative to partent paths using `.relative()` method
 - ⚙️ **New:** Control whether generated paths start with `/` using the `includeLeadingSlash` option.
 
----
+## 📖 Table of Contents
+
+- [Installation](#installation)
+- [Demos](#demos)
+- [Usage](#usage)
+- [Global Option: includeLeadingSlash](#global-option-includeleadingslash)
+- [New: .relative()](#-new-relative)
+- [Accepted Path Values](#-accepted-path-values)
+- [Quick Example](#quick-example)
+- [Examples by Framework](#-examples-by-framework)
+- [Type Safety Highlights](#-type-safety-highlights)
+- [Extended Examples](#extended-examples)
+- [Known Limitations](#️-known-limitations)
+- [Common Issues / FAQ](#-common-issues--faq)
+- [Changelog Summary](#-changelog-summary)
+- [Feedback](#-feedback)
 
 ## Installation
 
@@ -147,7 +160,7 @@ console.log(path);
 // => "/settings/1234"
 ```
 
-### 🧩 Accepted Path Values
+## 🧩 Accepted Path Values
 
 You can define a list of accepted values for dynamic segments using acceptedPathValues.
 This gives you stricter type safety and better IntelliSense.
@@ -192,7 +205,7 @@ import { generatePath } from "easy-route-management";
 navigate(generatePath(appRoutes.posts.byId, { postId }));
 ```
 
-### 🧠 IntelliSense Preview
+## 🧠 IntelliSense Preview
 
 Here's how route generation looks in VS Code with full type safety:
 
@@ -342,23 +355,86 @@ type AnalyticsRouteParams =
 
 ## ⚠️ Known Limitations
 
-- Reusing the same parameter name across nested routes (e.g., `:id` in both parent and child routes)
-  currently produces duplicate segments such as `/post/:id/:id`.
+### Reusing same parameter name
 
-  ```ts
-  const routesObj = {
-    post: {
-      path: "post/:id",
-      subRoutes: {
-        byId: { path: ":id" },
-      },
+Reusing the same parameter name across nested routes (e.g., `:id` in both parent and child routes) currently produces duplicate segments such as `/post/:id/:id`.
+
+```ts
+const routesObj = {
+  post: {
+    path: "post/:id",
+    subRoutes: {
+      byId: { path: ":id" },
     },
-  };
-  // Result: '/post/:id/:id'
-  ```
+  },
+};
+// Result: '/post/:id/:id'
+```
 
 Workaround: use unique parameter names in nested routes (e.g., `:postId`, `:commentId`).
 These limitations will be addressed in a future update.
+
+### Optional parameters followed by child routes
+
+When defining routes, optional parameters (`:param?`) cannot be followed by other segments — whether those segments are dynamic or static (like `"comments"`, `"sub-route"` or `":commentId"`).
+
+This is a limitation inherited from how most routing frameworks (React Router, Express, etc.) interpret paths:
+if an optional segment appears before another segment, it becomes impossible to determine whether that segment is part of the optional value or part of the next route.
+
+```ts
+const routesObj = {
+  post: {
+    path: "post/:postId?",
+    subRoutes: {
+      comments: { path: "comments" },
+      anotherSubRoute: { path: "sub-route" },
+    },
+  },
+};
+
+const appRoutes = createRoutePaths(routesObj);
+// Resulting paths: "/post/:postId?/comments", "/post/:postId?/sub-route"
+// ❌ Invalid — may generate paths like "/post//comments" or "/post//sub-route"
+```
+
+#### Why
+
+If `postId` is optional, generatePath might replace it with an empty string when omitted, resulting in a double slash (`//`) between route parts — for example, `/post//comments`.
+Most routers interpret this as an invalid or ambiguous route.
+
+#### ✅ Correct approach
+
+Move the optional parameter to the end of the route, make it required by removing `?`, or separate the routes explicitly.
+
+```ts
+const routesObj = {
+  post: {
+    path: "post/:postId",
+    subRoutes: {
+      comments: { path: "comments/:commentId?" },
+    },
+  },
+};
+
+const appRoutes = createRoutePaths(routesObj);
+// Resulting Paths:
+// => "/post/:postId"
+// => "/post/comments/:commentId?"
+
+// When using generatePath:
+generatePath(appRoutes.post, { postId: "123" })
+// => "/post/123"
+generatePath(appRoutes.post.comments, { postId: "123" })
+// => "/post/123/comments/"
+generatePath(appRoutes.post.comments, { postId: "123", commentId: "456" })
+// => "/post/123/comments/456"
+```
+
+#### ✅ Summary
+
+Optional route parameters (`:param?`) should always appear at the end of a path definition.
+Never place additional segments — static or dynamic — after them.
+This ensures all generated paths remain valid and unambiguous.
 
 ## ❓ Common Issues / FAQ
 
@@ -419,7 +495,7 @@ These limitations will be addressed in a future update.
 ### v1.4.0
 
 - **Added**
-  - New .relative() method to obtain route paths relative to the current node.
+  - New `.relative()` method to obtain route paths relative to the current node.
     Useful for frameworks like React Router or Angular that require nested relative paths.
 
     ```ts

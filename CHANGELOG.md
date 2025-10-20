@@ -82,3 +82,13 @@
 - 🧾 Docs
   - Updated README with full examples for `includeLeadingSlash` and `.relative()` overrides.
   - Improved sectioning and clarity in usage examples.
+
+## [1.5.2] — Clarify optional parameter behavior in README
+
+- 🧾 Docs
+  - Expanded **Known Limitations** section to explain issues caused by optional parameters (`:param?`) appearing before other segments or subroutes.
+  - Added detailed examples showing invalid patterns (e.g., `/post/:postId?/comments`) and correct alternatives.
+  - Improved clarity on why this behavior can lead to ambiguous or invalid generated paths.
+
+- 🧾 Improved README
+  - Added a clean and organized **Table of Contents** for easier navigation.
