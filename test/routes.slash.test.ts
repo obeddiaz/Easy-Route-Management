@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import createRoutePaths, { RouteObjInterface, generatePath } from "../src";
 
 const dummyRoutes = {
@@ -35,7 +34,7 @@ const dummyRoutes = {
 
 const routes = createRoutePaths(dummyRoutes);
 
-describe("Route Management", () => {
+describe("Route Management (with leading slash)", () => {
   it("should return the correct path for home route", () => {
     expect(routes.home.path).toBe("/home");
   });

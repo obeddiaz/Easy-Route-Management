@@ -15,6 +15,7 @@ Managing routes manually can quickly become cumbersome as your app grows. Easy R
 - ⚙️ Works with any framework or library that uses paths.
 - 🔒 Automatically URL-encodes parameter values.
 - 🧭 **New:** Easily get relative to partent paths using `.relative()` method
+- ⚙️ **New:** Control whether generated paths start with `/` using the `includeLeadingSlash` option.
 
 ---
 
@@ -70,6 +71,22 @@ appRoutes.user.settings.path
 // => "/user/settings"
 ```
 
+## Global Option: includeLeadingSlash
+
+By default, all generated paths start with a leading `/`.
+You can disable this globally by setting the `includeLeadingSlash` option to `false`.
+This is useful for frameworks like Angular, where routes are relative by default.
+
+```ts
+const appRoutes = createRoutePaths(routesObj, { includeLeadingSlash: false });
+
+appRoutes.user.settings.path;
+// => "user/settings"
+
+appRoutes.posts.byId.path;
+// => "posts/:postId"
+```
+
 ## 🧭 New: .relative()
 
 The .relative() method returns a new route object starting from the current level, ignoring any parent path segments.
@@ -102,7 +119,21 @@ routes.user.settings.relative().byId.path
 // => "/settings/:settingId"
 ```
 
-#### Using with generatePath
+### Overriding the Leading Slash
+
+The `.relative()` method supports an optional parameter that overrides the global includeLeadingSlash setting for that call.
+
+```ts
+const routes = createRoutePaths(routesObj, { includeLeadingSlash: false });
+
+routes.user.settings.relative().byId.path;
+// => "settings/:settingId"
+
+routes.user.settings.relative(true).byId.path;
+// => "/settings/:settingId"
+```
+
+### Using with generatePath
 
 ```ts
 import { generatePath } from "easy-route-management";
@@ -115,7 +146,6 @@ const path = generatePath(
 console.log(path);
 // => "/settings/1234"
 ```
-
 
 ### 🧩 Accepted Path Values
 
@@ -149,7 +179,7 @@ generatePath(routes.user.bySection, { userId: "42", section: "profile" });
 For non-TypeScript users, invalid `acceptedPathValues` will not throw an error at runtime.
 These restrictions are meant primarily for TypeScript compile-time safety.
 
-### Quick Example
+## Quick Example
 
 ```ts
 const postId = "123";
@@ -168,7 +198,7 @@ Here's how route generation looks in VS Code with full type safety:
 
 ![Intellisense Preview](https://github.com/obeddiaz/Easy-Route-Management/raw/master/assets/intellisense-example.png "Preview")
 
-### 🧭 Examples by Framework
+## 🧭 Examples by Framework
 
 ### React Router
 
@@ -310,8 +340,6 @@ type AnalyticsRouteParams =
 // -> { date: string; }
 ```
 
----
-
 ## ⚠️ Known Limitations
 
 - Reusing the same parameter name across nested routes (e.g., `:id` in both parent and child routes)
@@ -332,9 +360,46 @@ type AnalyticsRouteParams =
 Workaround: use unique parameter names in nested routes (e.g., `:postId`, `:commentId`).
 These limitations will be addressed in a future update.
 
----
+## ❓ Common Issues / FAQ
 
-## 🧾 Changelog Summary (v1.2.0)
+- Q: Why doesn’t my resulting routes object have .path or .relative()?
+  - This usually happens because the routes object wasn’t declared as a constant.
+    To enable full type inference and IntelliSense, make sure to use the as const assertion when defining your routes.
+
+    ```ts
+    // ❌ Without `as const`
+    const routesObj = {
+      user: { path: "user" },
+      posts: { path: "posts" },
+    };
+
+    const routes = createRoutePaths(routesObj);
+    // TypeScript cannot infer nested structure or available methods
+
+    // ✅ With `as const`
+    const routesObj = {
+      user: { path: "user" },
+      posts: { path: "posts" },
+    } as const;
+
+    const routes = createRoutePaths(routesObj);
+    // Full IntelliSense, `.path`, `.relative()`, `.sectionPath`, and param inference work correctly
+    ```
+
+- Q: Do I need TypeScript to use this library?
+  - No. It works in plain JavaScript too.
+    However, if you use TypeScript, you’ll get full type inference, validation, and IntelliSense.
+    The `satisfies RouteObjInterface` annotation is optional — it only helps catch structural errors when declaring your route objects.
+
+    ```ts
+    const routesObj = {
+      user: { path: "user" },
+    } as const satisfies RouteObjInterface;
+    ```
+
+## 🧾 Changelog Summary
+
+### v1.2.0
 
 - **Breaking changes:**
   - Removed `generatePath` from route objects.
@@ -345,13 +410,13 @@ These limitations will be addressed in a future update.
   - Parameters are now URL-encoded with `encodeURIComponent`.
   - Runtime validation for invalid route objects.
 
-## 🧾 Changelog Summary (v1.3.0)
+### v1.3.0
 
 - Added full support for both `import` and `require`.
 - Fixed issue where `require("easy-route-management")` returned an object instead of the main function.
 - No API changes — existing imports continue to work.
 
-## 🧾 Changelog Summary (v1.4.0)
+### v1.4.0
 
 - **Added**
   - New .relative() method to obtain route paths relative to the current node.
@@ -363,6 +428,31 @@ These limitations will be addressed in a future update.
     routes.user.settings.relative().byId.path
     // "/settings/:settingId"
     ```
+
+### v1.5.0
+
+- **Added**
+  - `includeLeadingSlash` global option in `createRoutePaths` to control whether all generated paths begin with a `/`.  
+    Useful for frameworks like Angular that expect relative (non-slash) paths.
+
+    ```ts
+    const routes = createRoutePaths(routesObj, { includeLeadingSlash: false });
+    routes.user.settings.path;
+    // => "user/settings"
+    ```
+
+  - `.relative()` now supports an **optional override parameter** to control the leading slash per call — allowing fine-grained path customization even when a global setting is defined.
+
+    ```ts
+    // Global config disables leading slashes
+    const routes = createRoutePaths(routesObj, { includeLeadingSlash: false });
+
+    routes.user.settings.relative().byId.path;
+    // => "settings/:settingId"
+    routes.user.settings.relative(true).byId.path;
+    // => "/settings/:settingId"
+    ```
+
 ---
 
 ## 📬 Feedback
