@@ -14,7 +14,7 @@ Managing routes manually can quickly become cumbersome as your app grows. Easy R
 - 🚫 Prevents access to undefined routes.
 - ⚙️ Works with any framework or library that uses paths.
 - 🔒 Automatically URL-encodes parameter values.
-- 🧭 **New:** Easily get relative paths using .relative()
+- 🧭 **New:** Easily get relative to partent paths using `.relative()` method
 
 ---
 
@@ -25,6 +25,12 @@ npm install easy-route-management
 # or
 yarn add easy-route-management
 ```
+
+## Demos
+
+[React Router Demo](https://codesandbox.io/p/sandbox/easy-route-management-jwy645)
+
+[Express Demo](https://codesandbox.io/p/devbox/eager-jennings-ctx37t)
 
 ## Usage
 
@@ -64,7 +70,7 @@ appRoutes.user.settings.path
 // => "/user/settings"
 ```
 
-### 🧭 New: .relative()
+## 🧭 New: .relative()
 
 The .relative() method returns a new route object starting from the current level, ignoring any parent path segments.
 This is especially useful for frameworks like React Router or Angular, where nested routes already inherit their parent’s path.
@@ -167,8 +173,9 @@ Here's how route generation looks in VS Code with full type safety:
 ### React Router
 
 ```tsx
-<Route path={appRoutes.user.path} />
-<Route path={appRoutes.user.settings.path} />
+<Route path={appRoutes.user.path}>
+  <Route path={appRoutes.user.settings.relative().path} />
+<Route>
 <Route path={appRoutes.posts.path} />
 <Route path={appRoutes.posts.byId.path} />
 ```
@@ -344,6 +351,18 @@ These limitations will be addressed in a future update.
 - Fixed issue where `require("easy-route-management")` returned an object instead of the main function.
 - No API changes — existing imports continue to work.
 
+## 🧾 Changelog Summary (v1.4.0)
+
+- **Added**
+  - New .relative() method to obtain route paths relative to the current node.
+    Useful for frameworks like React Router or Angular that require nested relative paths.
+
+    ```ts
+    routes.user.settings.relative().path
+    // "/settings"
+    routes.user.settings.relative().byId.path
+    // "/settings/:settingId"
+    ```
 ---
 
 ## 📬 Feedback

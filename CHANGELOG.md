@@ -58,3 +58,9 @@
   routes.user.settings.relative().path        // => "/settings"
   routes.user.settings.relative().byId.path   // => "/settings/:id"
   ```
+
+### [1.4.1]
+
+**Docs**
+
+- Updated README with improved `.relative()` examples and descriptions.
