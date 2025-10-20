@@ -1,6 +1,6 @@
 {
   "name": "easy-route-management",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Type-safe route management for JavaScript and TypeScript apps. Define nested routes in a single object and generate dynamic paths with parameters for React Router, Express, Angular, or any framework that uses paths.",
   "main": "./dist/cjs/index.cjs.js",
   "module": "./dist/esm/index.js",
@@ -47,7 +47,7 @@
   "author": "Obed Diaz",
   "license": "ISC",
   "peerDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": ">=4.1.0"
   },
   "peerDependenciesMeta": {
     "typescript": {

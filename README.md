@@ -179,7 +179,7 @@ generatePath(routes.user.bySection, { userId: "42", section: "profile" });
 For non-TypeScript users, invalid `acceptedPathValues` will not throw an error at runtime.
 These restrictions are meant primarily for TypeScript compile-time safety.
 
-### Quick Example
+## Quick Example
 
 ```ts
 const postId = "123";
@@ -198,7 +198,7 @@ Here's how route generation looks in VS Code with full type safety:
 
 ![Intellisense Preview](https://github.com/obeddiaz/Easy-Route-Management/raw/master/assets/intellisense-example.png "Preview")
 
-### 🧭 Examples by Framework
+## 🧭 Examples by Framework
 
 ### React Router
 
@@ -340,8 +340,6 @@ type AnalyticsRouteParams =
 // -> { date: string; }
 ```
 
----
-
 ## ⚠️ Known Limitations
 
 - Reusing the same parameter name across nested routes (e.g., `:id` in both parent and child routes)
@@ -362,7 +360,42 @@ type AnalyticsRouteParams =
 Workaround: use unique parameter names in nested routes (e.g., `:postId`, `:commentId`).
 These limitations will be addressed in a future update.
 
----
+## ❓ Common Issues / FAQ
+
+- Q: Why doesn’t my resulting routes object have .path or .relative()?
+  - This usually happens because the routes object wasn’t declared as a constant.
+    To enable full type inference and IntelliSense, make sure to use the as const assertion when defining your routes.
+
+    ```ts
+    // ❌ Without `as const`
+    const routesObj = {
+      user: { path: "user" },
+      posts: { path: "posts" },
+    };
+
+    const routes = createRoutePaths(routesObj);
+    // TypeScript cannot infer nested structure or available methods
+
+    // ✅ With `as const`
+    const routesObj = {
+      user: { path: "user" },
+      posts: { path: "posts" },
+    } as const;
+
+    const routes = createRoutePaths(routesObj);
+    // Full IntelliSense, `.path`, `.relative()`, `.sectionPath`, and param inference work correctly
+    ```
+
+- Q: Do I need TypeScript to use this library?
+  - No. It works in plain JavaScript too.
+    However, if you use TypeScript, you’ll get full type inference, validation, and IntelliSense.
+    The `satisfies RouteObjInterface` annotation is optional — it only helps catch structural errors when declaring your route objects.
+
+    ```ts
+    const routesObj = {
+      user: { path: "user" },
+    } as const satisfies RouteObjInterface;
+    ```
 
 ## 🧾 Changelog Summary
 
