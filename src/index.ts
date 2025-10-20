@@ -172,7 +172,20 @@ type InferRoutes<
             ? V & T[K]["acceptedPathValues"]
             : T[K]["acceptedPathValues"]
         > & {
-          relative: () => Route<
+          /**
+           * Return the relative path to the parent node
+           *
+           * @param includeLeadingSlash - Optional override; when true, forces a leading "/".
+           *
+           * @returns A new route object starting from the current level.
+           *
+           * @example
+           * routes.myRoute.mySubRoute.path // returns "/my-route/sub-route"
+           * routes.myRoute.mySubRoute.relative().path // returns "/sub-route"
+           */
+          relative: (
+            includeLeadingSlash?: boolean,
+          ) => Route<
             `/${T[K]["path"]}`,
             T[K]["path"],
             T[K]["acceptedPathValues"]
@@ -194,7 +207,20 @@ type InferRoutes<
           T[K]["path"],
           V & T[K]["acceptedPathValues"]
         > & {
-          relative: () => Route<
+          /**
+           * Return the relative path to the parent node
+           *
+           * @param includeLeadingSlash - Optional override; when true, forces a leading "/".
+           *
+           * @returns A new route object starting from the current level.
+           *
+           * @example
+           * routes.myRoute.mySubRoute.path // returns "/my-route/sub-route"
+           * routes.myRoute.mySubRoute.relative().path // returns "/sub-route"
+           */
+          relative: (
+            includeLeadingSlash?: boolean,
+          ) => Route<
             `/${T[K]["path"]}`,
             T[K]["path"],
             T[K]["acceptedPathValues"]
@@ -263,7 +289,9 @@ const generatePath = <
 type GenericRouteType = {
   path: string;
   sectionPath: string;
-  relative?: () => Omit<GenericRouteType, "relative">;
+  relative?: (
+    includeLeadingSlash?: boolean,
+  ) => Omit<GenericRouteType, "relative">;
 } & {
   [key: string]:
     | GenericRouteType
@@ -272,39 +300,68 @@ type GenericRouteType = {
     | undefined;
 };
 
-const generateRouteParams = (
-  routesObj: RouteObjInterface[string],
-  prevPath = "",
-  isRelative = false,
-): GenericRouteType => {
-  const routes: GenericRouteType = {
-    path: `${prevPath}/${routesObj.path}`,
-    sectionPath: routesObj.path,
-  };
-
-  if (!isRelative) {
-    routes.relative = () => {
-      return generateRouteParams(routesObj, "", true);
-    };
-  }
-  if (routesObj.subRoutes) {
-    Object.keys(routesObj.subRoutes).forEach((key) => {
-      routes[key] = generateRouteParams(
-        routesObj!.subRoutes![key],
-        routes.path,
-        isRelative,
-      );
-    });
-  }
-  return routes;
+type CreateRoutePathsOptions = {
+  /**
+   * When `true` (default), all generated routes
+   * start with a leading slash (e.g., `/user/settings`). When `false`, the
+   * leading slash is omitted (e.g., `user/settings`), which is useful for
+   * frameworks like Angular that expect relative-style paths.
+   *
+   * @example
+   * const routes = createRoutePaths(routesObj, { includeLeadingSlash: false });
+   * routes.user.settings.path // => "user/settings"
+   */
+  includeLeadingSlash?: boolean;
 };
 
 const createRoutePaths = <T extends RouteObjInterface>(
   routesObj: T,
+  options?: CreateRoutePathsOptions,
 ): InferRoutes<T> => {
   const routes: RouteObjInterface = {};
+  const { includeLeadingSlash = true } = options || {};
+  const baseRoute = includeLeadingSlash ? "/" : "";
+
+  const generateRouteParams = (
+    innerRoutesObj: RouteObjInterface[string],
+    prevPath = "",
+    isRelative = false,
+  ): GenericRouteType => {
+    const routes: GenericRouteType = {
+      path: `${prevPath}${innerRoutesObj.path}`,
+      sectionPath: innerRoutesObj.path,
+    };
+
+    if (!isRelative) {
+      routes.relative = (overrideIncludeLeadingSlash) => {
+        if (overrideIncludeLeadingSlash !== undefined) {
+          return generateRouteParams(
+            innerRoutesObj,
+            overrideIncludeLeadingSlash ? "/" : "",
+            true,
+          );
+        }
+        return generateRouteParams(innerRoutesObj, baseRoute, true);
+      };
+    }
+    if (innerRoutesObj.subRoutes) {
+      Object.keys(innerRoutesObj.subRoutes).forEach((key) => {
+        routes[key] = generateRouteParams(
+          innerRoutesObj!.subRoutes![key],
+          `${routes.path}/`,
+          isRelative,
+        );
+      });
+    }
+    return routes;
+  };
+
   Object.keys(routesObj).forEach((routeKey) => {
-    routes[routeKey] = generateRouteParams(routesObj[routeKey]);
+    routes[routeKey] = generateRouteParams(
+      routesObj[routeKey],
+      baseRoute,
+      false,
+    );
   });
   return routes as InferRoutes<T>;
 };
