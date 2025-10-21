@@ -15,7 +15,7 @@ const dummyRoutes = {
 const routes = createRoutePaths(dummyRoutes);
 
 describe("Performance", () => {
-  it("should resolve relative() quickly (under 10ms for 10k calls)", () => {
+  it("should resolve relative() quickly (under 20ms for 10k calls)", () => {
     const ITERATIONS = 10_000;
     const start = performance.now();
 

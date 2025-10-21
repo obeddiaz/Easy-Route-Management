@@ -38,6 +38,10 @@
     "CHANGELOG.md"
   ],
   "scripts": {
+    "patch": "npm version patch --no-git-tag-version",
+    "minor": "npm version minor --no-git-tag-version",
+    "deploy:patch": "npm version patch && git push --follow-tags",
+    "deploy:minor": "npm version minor && git push --follow-tags",
     "build": "tsc --project tsconfig.esm.json && tsc --project tsconfig.cjs.json",
     "prepublishOnly": "npm run build",
     "test": "jest test",
