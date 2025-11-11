@@ -9,11 +9,12 @@ Managing routes manually can quickly become cumbersome as your app grows. Easy R
 - ✅ Define nested routes in a single object.
 - 🔄 Automatically generate paths with dynamic parameters.
 - 🧠 Type-safe: ensures only valid routes and parameters are used.
+- 🛡️ (**NEW**) **Compile-time duplicate route detection** using `defineRoutes`.
 - 🚫 Prevents access to undefined routes.
 - ⚙️ Works with any framework or library that uses paths.
 - 🔒 Automatically URL-encodes parameter values.
-- 🧭 **New:** Easily get relative to partent paths using `.relative()` method
-- ⚙️ **New:** Control whether generated paths start with `/` using the `includeLeadingSlash` option.
+- 🧭 Easily get relative to parent paths using `.relative()` method
+- ⚙️ Control whether generated paths start with `/` using the `includeLeadingSlash` option.
 
 ## 📖 Table of Contents
 
@@ -26,6 +27,7 @@ Managing routes manually can quickly become cumbersome as your app grows. Easy R
 - [Quick Example](#quick-example)
 - [Examples by Framework](#-examples-by-framework)
 - [Type Safety Highlights](#-type-safety-highlights)
+- [Compile-Time Duplicate Route Detection (defineRoutes)](#-compile-time-duplicate-route-detection-defineroutes)
 - [Extended Examples](#extended-examples)
 - [Known Limitations](#️-known-limitations)
 - [Common Issues / FAQ](#-common-issues--faq)
@@ -278,7 +280,7 @@ app.get(appRoutes.posts.byId.path, (req, res) => {
 });
 ```
 
-### 🧠 Type Safety Highlights
+## 🧠 Type Safety Highlights
 
 - **Inferred parameter types:** TypeScript automatically infers required params.
 - **Compile-time safety:** Accessing invalid routes or missing params triggers TypeScript errors.
@@ -288,6 +290,37 @@ app.get(appRoutes.posts.byId.path, (req, res) => {
 generatePath(routes.posts.byId, {}); // ❌ Missing "postId"
 generatePath(routes.posts.byId, { postId: "123" }); // ✅
 ```
+
+### 🧱 Compile-Time Duplicate Route Detection (`defineRoutes`)
+
+In addition to generating and working with nested routes, you can use the defineRoutes helper to validate your routing structure at compile time, ensuring that no two routes resolve to the same pattern.
+
+This is useful when two routes look different but compile to the same shape, such as:
+- `/home/:id`
+- `/home/:homeId`
+
+Both resolve to `/home/:param`, so defineRoutes will catch the conflict before your app runs.
+
+#### Example
+
+```ts
+const routes = defineRoutes({
+  home: {
+    path: "home/:id",
+  },
+  public: {
+    // ❌ TypeScript Error:
+    //    Duplicate route shape detected: "/home/:param"
+    path: "home/:homeId",
+  },
+});
+```
+
+#### Key Points
+
+- Prevents ambiguous routing patterns
+- Works only at compile time — zero runtime cost
+- Your route object remains unchanged
 
 ## Extended Examples
 
@@ -530,6 +563,11 @@ This ensures all generated paths remain valid and unambiguous.
     ```
 
 ---
+
+### v1.5.3
+
+- Added new optional `defineRoutes()` helper to enable compile-time detection of duplicate route patterns.
+- No runtime changes or breaking API modifications.
 
 ## 📬 Feedback
 

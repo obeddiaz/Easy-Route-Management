@@ -229,6 +229,137 @@ type InferRoutes<
       : never;
 };
 
+// Keep a single "/" between segments
+type Join<Base extends string, Seg extends string> = Base extends ""
+  ? Seg
+  : Seg extends ""
+    ? Base
+    : `${Base}/${Seg}`;
+
+// Map any dynamic segment (with or without "?") to ":param"
+type NormalizeSegment<S extends string> = S extends `:${string}` | `:${string}?`
+  ? ":param"
+  : S;
+
+/**
+ * Expand optionals in a path into a union of variants and normalize each segment.
+ * Example:
+ *  ExpandOptionals<"home/:id?">  ->  "home" | "home/:param"
+ *  ExpandOptionals<"a/:x?/b">    ->  "a/b" | "a/:param/b"
+ */
+type ExpandOptionals<
+  S extends string,
+  Acc extends string = "",
+> = S extends `${infer Head}/${infer Tail}`
+  ? Head extends `:${string}?`
+    ? // optional segment: skip OR include ":param"
+      ExpandOptionals<Tail, Acc> | ExpandOptionals<Tail, Join<Acc, ":param">>
+    : // required segment
+      ExpandOptionals<Tail, Join<Acc, NormalizeSegment<Head>>>
+  : S extends `:${string}?`
+    ? // optional final segment: skip OR include
+      Acc | Join<Acc, ":param">
+    : // required final segment
+      Join<Acc, NormalizeSegment<S>>;
+
+// Extract subRoutes record if present
+type HasSubRoutes<X> = X extends { subRoutes: infer SR }
+  ? SR extends Record<string, object>
+    ? SR
+    : never
+  : never;
+
+// All full paths under a level (record of nodes), given a base
+type SubtreePathsOfLevel<
+  T extends Record<string, { path: string }>,
+  Base extends string,
+> = {
+  [K in keyof T & string]: SubtreePathsOfNode<T[K], Base>;
+}[keyof T & string];
+
+// Distribute a union base into level computation
+type SubtreePathsOfLevelWithBaseUnion<
+  T extends Record<string, { path: string }>,
+  BaseUnion extends string,
+> = BaseUnion extends string ? SubtreePathsOfLevel<T, BaseUnion> : never;
+
+type SubtreePathsOfNode<Node, Base extends string> = Node extends {
+  path: infer P extends string;
+}
+  ? // Node's own full paths (prefixed with "/")
+    | `/${ExpandOptionals<Join<Base, P>>}`
+      // Descendants: carry each expanded base variant downward
+      | (HasSubRoutes<Node> extends infer SR
+          ? SR extends Record<string, { path: string }>
+            ? SubtreePathsOfLevelWithBaseUnion<
+                SR,
+                ExpandOptionals<Join<Base, P>>
+              >
+            : never
+          : never)
+  : never;
+
+type DuplicateFullPathsAtLevel<
+  T extends Record<string, { path: string }>,
+  Base extends string,
+> = {
+  [K in keyof T & string]: {
+    [P in Exclude<keyof T & string, K> & string]: Extract<
+      SubtreePathsOfNode<T[K], Base>,
+      SubtreePathsOfNode<T[P], Base>
+    > extends never
+      ? never
+      : `Duplicate full path under "${K}" and "${P}": ${Extract<
+          SubtreePathsOfNode<T[K], Base>,
+          SubtreePathsOfNode<T[P], Base>
+        >}`;
+  }[Exclude<keyof T & string, K> & string];
+}[keyof T & string];
+
+type NoDuplicateFullPathsAtLevel<
+  T extends Record<string, { path: string }>,
+  Base extends string,
+> = DuplicateFullPathsAtLevel<T, Base> extends never ? unknown : never;
+
+// Recurse into subRoutes, carrying the expanded base (and fix T[K]["path"] narrowing)
+type NoDuplicateFullPathsRecursive<T, Base extends string = ""> =
+  // Validate this level
+  (T extends Record<string, { path: string }>
+    ? NoDuplicateFullPathsAtLevel<T, Base>
+    : unknown) &
+    // Recurse into children
+    {
+      [K in keyof T]: T[K] extends {
+        path: infer P extends string;
+        subRoutes: infer SR extends Record<string, { path: string }>;
+      }
+        ? {
+            subRoutes: NoDuplicateFullPathsRecursive<
+              SR,
+              ExpandOptionals<Join<Base, P>>
+            >;
+          }
+        : unknown;
+    };
+
+/**
+ * Performs compile-time validation of route definitions without modifying them.
+ *
+ * `defineRoutes` takes a route object and returns it unchanged, while applying
+ * a type-level check that ensures no two routes produce the same full path
+ * pattern (even if their parameter names differ).
+ *
+ * If a duplicated route shape is detected, TypeScript will throw an error
+ * at compile time. No runtime logic is added and no code is transformed.
+ *
+ * @param {object} t The route object definition to validate.
+ *
+ * @return {object} The same route object, unchanged. Used purely for compile-time validation.
+ */
+export const defineRoutes = <T extends RouteObjInterface>(
+  t: T & NoDuplicateFullPathsRecursive<T>,
+) => t;
+
 /**
  * Generates a full route path by replacing dynamic segments (e.g. `:userId`)
  * in a route definition with their corresponding parameter values.
