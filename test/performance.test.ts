@@ -1,6 +1,6 @@
-import createRoutePaths, { RouteObjInterface } from "../src";
+import createRoutePaths, { RouteObjInterface, defineRoutes } from "../src";
 
-const dummyRoutes = {
+const dummyRoutes = defineRoutes({
   user: {
     path: "user",
     subRoutes: {
@@ -10,7 +10,7 @@ const dummyRoutes = {
       },
     },
   },
-} as const satisfies RouteObjInterface;
+} as const satisfies RouteObjInterface);
 
 const routes = createRoutePaths(dummyRoutes);
 

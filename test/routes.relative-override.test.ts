@@ -1,6 +1,10 @@
-import createRoutePaths, { RouteObjInterface, generatePath } from "../src";
+import createRoutePaths, {
+  RouteObjInterface,
+  generatePath,
+  defineRoutes,
+} from "../src";
 
-const dummyRoutes = {
+const dummyRoutes = defineRoutes({
   user: {
     path: "user",
     subRoutes: {
@@ -12,7 +16,7 @@ const dummyRoutes = {
       },
     },
   },
-} as const satisfies RouteObjInterface;
+} as const satisfies RouteObjInterface);
 
 describe("relative() override includeLeadingSlash", () => {
   it("should respect global includeLeadingSlash = false by default", () => {

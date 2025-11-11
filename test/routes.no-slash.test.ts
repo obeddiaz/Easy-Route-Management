@@ -1,6 +1,10 @@
-import createRoutePaths, { RouteObjInterface, generatePath } from "../src";
+import createRoutePaths, {
+  RouteObjInterface,
+  generatePath,
+  defineRoutes,
+} from "../src";
 
-const dummyRoutes = {
+const dummyRoutes = defineRoutes({
   home: { path: "home" },
   about: {
     path: "about",
@@ -22,7 +26,7 @@ const dummyRoutes = {
     },
   },
   posts: { path: "posts/:postId?" },
-} as const satisfies RouteObjInterface;
+} as const satisfies RouteObjInterface);
 
 // Disable leading slashes in generated paths
 const routes = createRoutePaths(dummyRoutes, { includeLeadingSlash: false });

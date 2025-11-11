@@ -1,6 +1,10 @@
-import createRoutePaths, { RouteObjInterface, generatePath } from "../src";
+import createRoutePaths, {
+  RouteObjInterface,
+  generatePath,
+  defineRoutes,
+} from "../src";
 
-const dummyRoutes = {
+const dummyRoutes = defineRoutes({
   home: {
     path: "home",
   },
@@ -30,7 +34,7 @@ const dummyRoutes = {
   posts: {
     path: "posts/:postId?",
   },
-} as const satisfies RouteObjInterface;
+} as const satisfies RouteObjInterface);
 
 const routes = createRoutePaths(dummyRoutes);
 
